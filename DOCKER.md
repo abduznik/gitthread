@@ -15,7 +15,8 @@ services:
     ports:
       - "8095:8095"
     environment:
-      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      # Required for private repositories and higher rate limits
+      - GITHUB_TOKEN=${GITHUB_TOKEN} 
     restart: unless-stopped
 ```
 

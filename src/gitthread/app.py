@@ -89,12 +89,18 @@ if st.button("Ingest"):
             with st.spinner("Ingesting concurrently..."):
                 try:
                     # Token priority: 1. User Input, 2. Env Var, 3. Streamlit Secrets
-                    token = user_token if user_token else os.getenv("GITHUB_TOKEN")
+                    # Ensure we handle empty strings as None
+                    token = user_token if user_token and user_token.strip() else os.getenv("GITHUB_TOKEN")
                     if not token:
                         try:
                             token = st.secrets.get("GITHUB_TOKEN")
                         except Exception:
                             token = None
+                    
+                    # Force it into environment as well, as gitingest components sometimes 
+                    # check the environment globally
+                    if token:
+                        os.environ["GITHUB_TOKEN"] = token
                             
                     md_result = asyncio.run(perform_ingestion(thread_info, token, include_repo_context, include_full_repo))
                     
