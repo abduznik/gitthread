@@ -96,6 +96,12 @@ if st.button("Ingest"):
                             token = st.secrets.get("GITHUB_TOKEN")
                         except Exception:
                             token = None
+                    
+                    # CRITICAL FIX: Remove GITHUB_TOKEN from environment 
+                    # This prevents the underlying 'git' command from auto-adding a duplicate header.
+                    # while we still pass 'token' explicitly to the functions.
+                    if "GITHUB_TOKEN" in os.environ:
+                        del os.environ["GITHUB_TOKEN"]
                             
                     md_result = asyncio.run(perform_ingestion(thread_info, token, include_repo_context, include_full_repo))
                     
