@@ -27,7 +27,7 @@ st.markdown("""
     .stCheckbox label { color: #e5e7eb !important; }
     div.stDownloadButton > button { background-color: #374151 !important; color: white !important; width: auto !important; padding: 0.25rem 1rem !important; font-size: 0.875rem !important; }
     </style>
-    "", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 st.markdown("<h1>gitthread</h1>", unsafe_allow_html=True)
 st.markdown("<p class='subtitle'>Ingest GitHub Issues and Pull Requests into LLM-friendly text dumps.</p>", unsafe_allow_html=True)

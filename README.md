@@ -2,6 +2,8 @@
 
 Ingest GitHub Issues and Pull Requests into LLM-friendly text dumps.
 
+**Live Demo:** [gitthread.streamlit.app](https://gitthread.streamlit.app)
+
 ![gitthread showcase](image.png)
 
 gitthread is a companion tool to gitingest that focuses on the conversational context of GitHub Issues and Pull Requests.
