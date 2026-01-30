@@ -3,7 +3,6 @@ import os
 import sys
 import asyncio
 import gitingest.utils.query_parser_utils
-import gitingest.utils.auth
 
 # Ensure the 'src' directory is in sys.path for Streamlit Cloud
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -11,13 +10,9 @@ src_path = os.path.abspath(os.path.join(current_dir, ".."))
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
-# --- FIX 1: Allow tokens in URLs (fixes "Unknown domain") ---
+# --- CRITICAL FIX: Allow tokens in URLs ---
+# This overrides the validation so we can pass 'https://TOKEN@github.com'
 gitingest.utils.query_parser_utils._validate_host = lambda host: None
-
-# --- FIX 2: Stop auto-loading env var (fixes "Duplicate header") ---
-# This forces the library to use ONLY the token we explicitly pass it.
-# If we pass None, it stays None, even if GITHUB_TOKEN is in env.
-gitingest.utils.auth.resolve_token = lambda token: token
 
 from gitthread.parser import parse_github_url
 from gitthread.ingestor import GHIngestor, format_thread_to_markdown
@@ -62,26 +57,23 @@ with st.expander("Advanced Options & Token"):
         include_full_repo = st.checkbox("Include Full Repository Content", value=False)
 
 async def perform_ingestion(url_info, token, repo_context, full_repo):
-    # 1. API OPERATIONS (Pass the real token)
-    # This uses the GitHub API directly, so we give it the token normally.
+    # 1. API OPERATIONS (Use token for PyGithub)
     ingestor = GHIngestor(token=token)
     
     tasks = []
     # Task 1: Fetch Thread (Uses API)
     tasks.append(asyncio.to_thread(ingestor.ingest_thread, url_info))
     
-    # Task 2: Fetch Repo (Uses Git Binary)
+    # Task 2: Fetch Repo (URL Embedding Strategy)
     if repo_context or full_repo:
-        # 2. GIT OPERATIONS FIX (URL Embedding)
         if token:
-            # We manually embed the token into the URL: https://TOKEN@github.com/...
+            # Embed token into the URL: https://TOKEN@github.com/...
             repo_url = f"https://{token}@github.com/{url_info.owner}/{url_info.repo}"
             
-            # CRITICAL: We pass None. Because of Fix #2 above, the library 
-            # will NOT go looking for the env var. It will see None and add zero headers.
+            # PASS NONE: We renamed the Env Var, so gitingest won't find it there.
+            # Passing None here ensures it adds ZERO headers.
             use_token_arg = None 
         else:
-            # Public repo / No token case
             repo_url = f"https://github.com/{url_info.owner}/{url_info.repo}"
             use_token_arg = None
 
@@ -112,17 +104,12 @@ if st.button("Ingest"):
         else:
             with st.spinner("Ingesting concurrently..."):
                 try:
-                    # 1. Get the token safely (UI input takes priority, then Env Var)
-                    # We DO NOT set os.environ here. This keeps requests isolated.
-                    token = user_token if user_token and user_token.strip() else os.getenv("GITHUB_TOKEN")
-                    if not token:
-                        try:
-                            token = st.secrets.get("GITHUB_TOKEN")
-                        except Exception:
-                            token = None
+                    # READ NEW VARIABLE NAME
+                    # This prevents 'gitingest' from secretly finding it in the environment
+                    env_token = os.getenv("GIT_THREAD_TOKEN") or os.getenv("GITHUB_TOKEN")
+                    token = user_token if user_token and user_token.strip() else env_token
                     
-                    # 2. Run Ingestion
-                    # We pass the token directly. The logic in perform_ingestion handles the rest.
+                    # Run Ingestion
                     md_result = asyncio.run(perform_ingestion(
                         thread_info, 
                         token, 
@@ -130,7 +117,7 @@ if st.button("Ingest"):
                         include_full_repo
                     ))
                     
-                    # 3. Success State
+                    # Success State
                     st.session_state['output'] = md_result
                     st.session_state['repo_name'] = thread_info.repo
                     st.session_state['number'] = thread_info.number

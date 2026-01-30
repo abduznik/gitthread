@@ -8,19 +8,23 @@ This guide covers how to deploy `gitthread` using Docker Compose, optimized for 
 Use this if the package is public or you have logged in to `ghcr.io`.
 
 ```yaml
-services:
+srvices:
   gitthread:
     image: ghcr.io/abduznik/gitthread:latest
     container_name: gitthread
     ports:
       - "8095:8095"
     environment:
-      # Required for private repositories and higher rate limits
-      - GITHUB_TOKEN=${GITHUB_TOKEN} 
+      - ALLOWED_HOSTS=*
+      - GITINGEST_METRICS_ENABLED=false
+      # Use this variable name to avoid duplicate header conflicts
+      - GIT_THREAD_TOKEN=${GIT_TOKEN:-}
     restart: unless-stopped
 ```
 
-### Option B: Build from Source (Best for local/private use)
+> **Note:** If you are ingesting **private repositories**, you must provide a `GIT_THREAD_TOKEN`. In Dockge, you can add this in the "Environment" section of the stack.
+
+### Option B: Build from Source
 Use this if you encounter "authentication" or "could not read username" errors.
 
 ```yaml
@@ -31,7 +35,9 @@ services:
     ports:
       - "8095:8095"
     environment:
-      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - ALLOWED_HOSTS=*
+      - GITINGEST_METRICS_ENABLED=false
+      - GIT_THREAD_TOKEN=${GIT_TOKEN:-}
     restart: unless-stopped
 ```
 
