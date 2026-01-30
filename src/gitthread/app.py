@@ -96,11 +96,6 @@ if st.button("Ingest"):
                             token = st.secrets.get("GITHUB_TOKEN")
                         except Exception:
                             token = None
-                    
-                    # Force it into environment as well, as gitingest components sometimes 
-                    # check the environment globally
-                    if token:
-                        os.environ["GITHUB_TOKEN"] = token
                             
                     md_result = asyncio.run(perform_ingestion(thread_info, token, include_repo_context, include_full_repo))
                     
