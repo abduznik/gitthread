@@ -9,9 +9,9 @@ Copy and paste the following into your `docker-compose.yml` or your Dockge stack
 ```yaml
 services:
   gitthread:
-    image: abduznik/gitthread:latest # Or build from source
+    image: ghcr.io/abduznik/gitthread:latest
     build: 
-      context: https://github.com/abduznik/gitthread.git
+      context: https://github.com/abduznik/gitthread.git#main
       dockerfile: Dockerfile
     ports:
       - "8095:8095"
