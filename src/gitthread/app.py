@@ -41,11 +41,15 @@ st.markdown("<h1>gitthread</h1>", unsafe_allow_html=True)
 st.markdown("<p class='subtitle'>Ingest GitHub Issues and Pull Requests into LLM-friendly text dumps.</p>", unsafe_allow_html=True)
 
 url = st.text_input("GitHub Issue or PR URL", placeholder="https://github.com/user/repo/issues/1")
-col1, col2 = st.columns(2)
-with col1:
-    include_repo_context = st.checkbox("Include Repository Summary", value=True)
-with col2:
-    include_full_repo = st.checkbox("Include Full Repository Content", value=False)
+
+# Advanced Options
+with st.expander("Advanced Options & Token"):
+    user_token = st.text_input("GitHub Personal Access Token (Optional)", type="password", help="Providing a token allows for higher rate limits and access to private repositories.")
+    col1, col2 = st.columns(2)
+    with col1:
+        include_repo_context = st.checkbox("Include Repository Summary", value=True)
+    with col2:
+        include_full_repo = st.checkbox("Include Full Repository Content", value=False)
 
 async def perform_ingestion(url_info, token, repo_context, full_repo):
     ingestor = GHIngestor(token=token)
@@ -84,7 +88,14 @@ if st.button("Ingest"):
         else:
             with st.spinner("Ingesting concurrently..."):
                 try:
-                    token = os.getenv("GITHUB_TOKEN") or st.secrets.get("GITHUB_TOKEN")
+                    # Token priority: 1. User Input, 2. Env Var, 3. Streamlit Secrets
+                    token = user_token if user_token else os.getenv("GITHUB_TOKEN")
+                    if not token:
+                        try:
+                            token = st.secrets.get("GITHUB_TOKEN")
+                        except Exception:
+                            token = None
+                            
                     md_result = asyncio.run(perform_ingestion(thread_info, token, include_repo_context, include_full_repo))
                     
                     st.session_state['output'] = md_result

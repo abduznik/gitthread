@@ -3,8 +3,10 @@ README.md
 pyproject.toml
 src/gitthread/__init__.py
 src/gitthread/__main__.py
+src/gitthread/app.py
 src/gitthread/ingestor.py
 src/gitthread/parser.py
+src/gitthread/web.py
 src/gitthread.egg-info/PKG-INFO
 src/gitthread.egg-info/SOURCES.txt
 src/gitthread.egg-info/dependency_links.txt

@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: gitthread
-Version: 0.1.0
+Version: 0.1.2
 Summary: Ingest GitHub Issues and Pull Requests into LLM-friendly text dumps
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
@@ -13,6 +13,7 @@ Requires-Dist: loguru>=0.7.0
 Requires-Dist: pydantic
 Requires-Dist: python-dotenv
 Requires-Dist: tiktoken>=0.7.0
+Requires-Dist: streamlit
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
 Requires-Dist: pytest-asyncio; extra == "dev"
@@ -25,6 +26,10 @@ Dynamic: license-file
 
 Ingest GitHub Issues and Pull Requests into LLM-friendly text dumps.
 
+**Live Demo:** [gitthread.streamlit.app](https://gitthread.streamlit.app)
+
+![gitthread showcase](image.png)
+
 gitthread is a companion tool to gitingest that focuses on the conversational context of GitHub Issues and Pull Requests.
 
 ## Credits
@@ -33,11 +38,12 @@ This project is inspired by and uses the library from [gitingest](https://github
 
 ## Features
 
-- Issue & PR Ingestion: Extract title, body, and all comments from any public GitHub issue or PR.
-- Smart Linking: Automatically detects and ingests linked issues (e.g., #123 or "fixes #123") in PR descriptions.
-- Repository Context: Integrates with gitingest to provide a summary of the repository structure.
-- LLM-Friendly: Outputs clean Markdown formatted for easy consumption by LLMs.
-- CLI & Web: Use it in your terminal or via a web interface.
+- **Issue & PR Ingestion**: Extract title, body, and all comments from any public GitHub issue or PR.
+- **Smart Linking**: Automatically detects and ingests linked issues (e.g., #123 or "fixes #123") in PR descriptions.
+- **Repository Context**: Integrates with gitingest to provide a summary or full content of the repository.
+- **Concurrent Processing**: Optimized fetching of both thread and repository data.
+- **LLM-Friendly**: Outputs clean Markdown formatted for easy consumption by LLMs.
+- **CLI & Web**: Use it in your terminal or via a polished Streamlit dark-themed interface.
 
 ## Installation
 
@@ -52,6 +58,16 @@ pip install gitthread
 ```bash
 gitthread https://github.com/user/repo/issues/1
 ```
+
+### Web Interface
+
+```bash
+gitthread-web
+```
+
+## Docker
+
+For instructions on how to deploy `gitthread` using Docker or Docker Compose (including Dockge), please see [DOCKER.md](DOCKER.md).
 
 ## License
 

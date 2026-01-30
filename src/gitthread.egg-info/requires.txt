@@ -6,6 +6,7 @@ loguru>=0.7.0
 pydantic
 python-dotenv
 tiktoken>=0.7.0
+streamlit
 
 [dev]
 pytest
