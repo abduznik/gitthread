@@ -52,16 +52,33 @@ with st.expander("Advanced Options & Token"):
         include_full_repo = st.checkbox("Include Full Repository Content", value=False)
 
 async def perform_ingestion(url_info, token, repo_context, full_repo):
+    # 1. API OPERATIONS (Use the raw token)
+    # We pass the raw token to GHIngestor because it uses the GitHub API (PyGithub),
+    # which is strictly for metadata and doesn't trigger the "Duplicate Header" git error.
     ingestor = GHIngestor(token=token)
-    repo_url = f"https://github.com/{url_info.owner}/{url_info.repo}"
     
     tasks = []
-    # Task 1: Fetch Thread
+    # Task 1: Fetch Thread (Uses API)
     tasks.append(asyncio.to_thread(ingestor.ingest_thread, url_info))
     
-    # Task 2: Fetch Repo (Async natively in gitingest)
+    # Task 2: Fetch Repo (Uses Git Binary)
     if repo_context or full_repo:
-        tasks.append(ingest_async(repo_url, token=token))
+        # 2. GIT OPERATIONS FIX (URL Embedding)
+        if token:
+            # We manually embed the token into the URL: https://TOKEN@github.com/...
+            # This creates a unique, authenticated URL for this specific request.
+            repo_url = f"https://{token}@github.com/{url_info.owner}/{url_info.repo}"
+            
+            # CRITICAL: We pass None to the library. This tricks it into thinking 
+            # "No token provided, I won't add any headers."
+            # This prevents the "Duplicate Header" crash while keeping the request authenticated.
+            use_token_arg = None 
+        else:
+            # Public repo / No token case
+            repo_url = f"https://github.com/{url_info.owner}/{url_info.repo}"
+            use_token_arg = None
+
+        tasks.append(ingest_async(repo_url, token=use_token_arg))
     
     results = await asyncio.gather(*tasks)
     
@@ -88,8 +105,8 @@ if st.button("Ingest"):
         else:
             with st.spinner("Ingesting concurrently..."):
                 try:
-                    # Token priority: 1. User Input, 2. Env Var, 3. Streamlit Secrets
-                    # Ensure we handle empty strings as None
+                    # 1. Get the token safely (UI input takes priority, then Env Var)
+                    # We DO NOT set os.environ here. This keeps requests isolated.
                     token = user_token if user_token and user_token.strip() else os.getenv("GITHUB_TOKEN")
                     if not token:
                         try:
@@ -97,14 +114,16 @@ if st.button("Ingest"):
                         except Exception:
                             token = None
                     
-                    # CRITICAL FIX: Remove GITHUB_TOKEN from environment 
-                    # This prevents the underlying 'git' command from auto-adding a duplicate header.
-                    # while we still pass 'token' explicitly to the functions.
-                    if "GITHUB_TOKEN" in os.environ:
-                        del os.environ["GITHUB_TOKEN"]
-                            
-                    md_result = asyncio.run(perform_ingestion(thread_info, token, include_repo_context, include_full_repo))
+                    # 2. Run Ingestion
+                    # We pass the token directly. The logic in perform_ingestion handles the rest.
+                    md_result = asyncio.run(perform_ingestion(
+                        thread_info, 
+                        token, 
+                        include_repo_context, 
+                        include_full_repo
+                    ))
                     
+                    # 3. Success State
                     st.session_state['output'] = md_result
                     st.session_state['repo_name'] = thread_info.repo
                     st.session_state['number'] = thread_info.number

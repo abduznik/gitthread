@@ -1,6 +1,6 @@
 [project]
 name = "gitthread"
-version = "0.1.2"
+version = "0.1.3"
 description = "Ingest GitHub Issues and Pull Requests into LLM-friendly text dumps"
 readme = {file = "README.md", content-type = "text/markdown" }
 requires-python = ">= 3.8"
