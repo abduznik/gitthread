@@ -4,12 +4,28 @@ This guide covers how to deploy `gitthread` using Docker Compose, optimized for 
 
 ## Docker Compose Configuration
 
-Copy and paste the following into your `docker-compose.yml` or your Dockge stack configuration:
+### Option A: Using the Pre-built Image (Fastest)
+Use this if the package is public or you have logged in to `ghcr.io`.
 
 ```yaml
 services:
   gitthread:
     image: ghcr.io/abduznik/gitthread:latest
+    container_name: gitthread
+    ports:
+      - "8095:8095"
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+    restart: unless-stopped
+```
+
+### Option B: Build from Source (Best for local/private use)
+Use this if you encounter "authentication" or "could not read username" errors.
+
+```yaml
+services:
+  gitthread:
+    build: .
     container_name: gitthread
     ports:
       - "8095:8095"
