@@ -12,6 +12,14 @@ if src_path not in sys.path:
 from gitthread.parser import parse_github_url
 from gitthread.ingestor import GHIngestor, format_thread_to_markdown
 from gitingest import ingest_async
+import gitingest.utils.query_parser_utils
+
+# --- FIX START: Monkeypatch gitingest validation ---
+# This overrides the strict domain check in gitingest. 
+# It allows us to pass "https://TOKEN@github.com" without triggering "Unknown domain".
+gitingest.utils.query_parser_utils._validate_host = lambda host: None
+# --- FIX END ---
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -52,9 +60,7 @@ with st.expander("Advanced Options & Token"):
         include_full_repo = st.checkbox("Include Full Repository Content", value=False)
 
 async def perform_ingestion(url_info, token, repo_context, full_repo):
-    # 1. API OPERATIONS (Use the raw token)
-    # We pass the raw token to GHIngestor because it uses the GitHub API (PyGithub),
-    # which is strictly for metadata and doesn't trigger the "Duplicate Header" git error.
+    # 1. API OPERATIONS (Keep using the token normally)
     ingestor = GHIngestor(token=token)
     
     tasks = []
@@ -66,7 +72,7 @@ async def perform_ingestion(url_info, token, repo_context, full_repo):
         # 2. GIT OPERATIONS FIX (URL Embedding)
         if token:
             # We manually embed the token into the URL: https://TOKEN@github.com/...
-            # This creates a unique, authenticated URL for this specific request.
+            # We explicitly replaced the validation logic above so this format is accepted.
             repo_url = f"https://{token}@github.com/{url_info.owner}/{url_info.repo}"
             
             # CRITICAL: We pass None to the library. This tricks it into thinking 
