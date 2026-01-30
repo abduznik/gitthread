@@ -67,8 +67,9 @@ async def perform_ingestion(url_info, token, repo_context, full_repo):
     # Task 2: Fetch Repo (URL Embedding Strategy)
     if repo_context or full_repo:
         if token:
-            # Embed token into the URL: https://TOKEN@github.com/...
-            repo_url = f"https://{token}@github.com/{url_info.owner}/{url_info.repo}"
+            # We manually embed the token into the URL: https://TOKEN:x-oauth-basic@github.com/...
+            # We add ':x-oauth-basic' to tell Git "This is the password, don't ask me for one."
+            repo_url = f"https://{token}:x-oauth-basic@github.com/{url_info.owner}/{url_info.repo}"
             
             # PASS NONE: We renamed the Env Var, so gitingest won't find it there.
             # Passing None here ensures it adds ZERO headers.
