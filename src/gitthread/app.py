@@ -57,24 +57,26 @@ with st.expander("Advanced Options & Token"):
         include_full_repo = st.checkbox("Include Full Repository Content", value=False)
 
 async def perform_ingestion(url_info, token, repo_context, full_repo):
-    # 1. API OPERATIONS (Use token for PyGithub)
-    ingestor = GHIngestor(token=token)
+    # API OPERATIONS (Use clean token for PyGithub)
+    clean_token = token.strip() if token else None
+    ingestor = GHIngestor(token=clean_token)
     
     tasks = []
     # Task 1: Fetch Thread (Uses API)
     tasks.append(asyncio.to_thread(ingestor.ingest_thread, url_info))
     
-    # Task 2: Fetch Repo (URL Embedding Strategy)
+    # Task 2: Fetch Repo (Uses Git Binary)
     if repo_context or full_repo:
-        if token:
-            # We manually embed the token into the URL: https://TOKEN:x-oauth-basic@github.com/...
-            # We add ':x-oauth-basic' to tell Git "This is the password, don't ask me for one."
-            repo_url = f"https://{token}:x-oauth-basic@github.com/{url_info.owner}/{url_info.repo}"
+        if clean_token:
+            # We manually embed the token into the URL: https://git:TOKEN@github.com/...
+            # Using 'git' as the username is the standard compatibility convention for PATs.
+            repo_url = f"https://git:{clean_token}@github.com/{url_info.owner}/{url_info.repo}"
             
             # PASS NONE: We renamed the Env Var, so gitingest won't find it there.
             # Passing None here ensures it adds ZERO headers.
             use_token_arg = None 
         else:
+            # Public repo / No token case
             repo_url = f"https://github.com/{url_info.owner}/{url_info.repo}"
             use_token_arg = None
 
@@ -105,12 +107,13 @@ if st.button("Ingest"):
         else:
             with st.spinner("Ingesting concurrently..."):
                 try:
-                    # READ NEW VARIABLE NAME
-                    # This prevents 'gitingest' from secretly finding it in the environment
+                    # 1. Get the token safely (UI input takes priority, then Env Var)
+                    # We DO NOT set os.environ here. This keeps requests isolated.
                     env_token = os.getenv("GIT_THREAD_TOKEN") or os.getenv("GITHUB_TOKEN")
                     token = user_token if user_token and user_token.strip() else env_token
                     
-                    # Run Ingestion
+                    # 2. Run Ingestion
+                    # We pass the token directly. The logic in perform_ingestion handles sanitization and URL embedding.
                     md_result = asyncio.run(perform_ingestion(
                         thread_info, 
                         token, 
@@ -118,7 +121,7 @@ if st.button("Ingest"):
                         include_full_repo
                     ))
                     
-                    # Success State
+                    # 3. Success State
                     st.session_state['output'] = md_result
                     st.session_state['repo_name'] = thread_info.repo
                     st.session_state['number'] = thread_info.number
