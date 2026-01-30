@@ -2,6 +2,8 @@ import streamlit as st
 import os
 import sys
 import asyncio
+import gitingest.utils.query_parser_utils
+import gitingest.utils.auth
 
 # Ensure the 'src' directory is in sys.path for Streamlit Cloud
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -9,17 +11,17 @@ src_path = os.path.abspath(os.path.join(current_dir, ".."))
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
+# --- FIX 1: Allow tokens in URLs (fixes "Unknown domain") ---
+gitingest.utils.query_parser_utils._validate_host = lambda host: None
+
+# --- FIX 2: Stop auto-loading env var (fixes "Duplicate header") ---
+# This forces the library to use ONLY the token we explicitly pass it.
+# If we pass None, it stays None, even if GITHUB_TOKEN is in env.
+gitingest.utils.auth.resolve_token = lambda token: token
+
 from gitthread.parser import parse_github_url
 from gitthread.ingestor import GHIngestor, format_thread_to_markdown
 from gitingest import ingest_async
-import gitingest.utils.query_parser_utils
-
-# --- FIX START: Monkeypatch gitingest validation ---
-# This overrides the strict domain check in gitingest. 
-# It allows us to pass "https://TOKEN@github.com" without triggering "Unknown domain".
-gitingest.utils.query_parser_utils._validate_host = lambda host: None
-# --- FIX END ---
-
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -60,7 +62,8 @@ with st.expander("Advanced Options & Token"):
         include_full_repo = st.checkbox("Include Full Repository Content", value=False)
 
 async def perform_ingestion(url_info, token, repo_context, full_repo):
-    # 1. API OPERATIONS (Keep using the token normally)
+    # 1. API OPERATIONS (Pass the real token)
+    # This uses the GitHub API directly, so we give it the token normally.
     ingestor = GHIngestor(token=token)
     
     tasks = []
@@ -72,12 +75,10 @@ async def perform_ingestion(url_info, token, repo_context, full_repo):
         # 2. GIT OPERATIONS FIX (URL Embedding)
         if token:
             # We manually embed the token into the URL: https://TOKEN@github.com/...
-            # We explicitly replaced the validation logic above so this format is accepted.
             repo_url = f"https://{token}@github.com/{url_info.owner}/{url_info.repo}"
             
-            # CRITICAL: We pass None to the library. This tricks it into thinking 
-            # "No token provided, I won't add any headers."
-            # This prevents the "Duplicate Header" crash while keeping the request authenticated.
+            # CRITICAL: We pass None. Because of Fix #2 above, the library 
+            # will NOT go looking for the env var. It will see None and add zero headers.
             use_token_arg = None 
         else:
             # Public repo / No token case
