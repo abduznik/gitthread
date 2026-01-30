@@ -41,13 +41,7 @@ gitthread-web
 
 ## Docker
 
-Run gitthread using Docker Compose on port 8095:
-
-```bash
-docker-compose up -d
-```
-
-The application will be available at `http://localhost:8095`. You can optionally provide a `GITHUB_TOKEN` in your environment to increase rate limits.
+For instructions on how to deploy `gitthread` using Docker or Docker Compose (including Dockge), please see [DOCKER.md](DOCKER.md).
 
 ## License
 

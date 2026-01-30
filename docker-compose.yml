@@ -1,8 +1,0 @@
-services:
-  gitthread:
-    build: .
-    ports:
-      - "8095:8095"
-    environment:
-      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
-    restart: unless-stopped
