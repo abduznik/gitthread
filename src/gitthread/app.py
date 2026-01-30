@@ -1,6 +1,14 @@
 import streamlit as st
 import os
+import sys
 import asyncio
+
+# Ensure the 'src' directory is in sys.path for Streamlit Cloud
+current_dir = os.path.dirname(os.path.abspath(__file__))
+src_path = os.path.abspath(os.path.join(current_dir, ".."))
+if src_path not in sys.path:
+    sys.path.insert(0, src_path)
+
 from gitthread.parser import parse_github_url
 from gitthread.ingestor import GHIngestor, format_thread_to_markdown
 from gitingest import ingest_async
