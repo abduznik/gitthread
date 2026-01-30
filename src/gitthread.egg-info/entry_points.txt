@@ -1,0 +1,2 @@
+[console_scripts]
+gitthread = gitthread.__main__:main

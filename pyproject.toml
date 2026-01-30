@@ -1,0 +1,41 @@
+[project]
+name = "gitthread"
+version = "0.1.0"
+description = "Ingest GitHub Issues and Pull Requests into LLM-friendly text dumps"
+readme = {file = "README.md", content-type = "text/markdown" }
+requires-python = ">= 3.8"
+dependencies = [
+    "click>=8.0.0",
+    "PyGithub>=2.0.0",
+    "gitingest>=0.3.1",
+    "httpx",
+    "loguru>=0.7.0",
+    "pydantic",
+    "python-dotenv",
+    "tiktoken>=0.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
+server = [
+    "fastapi[standard]>=0.109.1",
+    "uvicorn>=0.11.7",
+]
+
+[project.scripts]
+gitthread = "gitthread.__main__:main"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = {find = {where = ["src"]}}
+include-package-data = true
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests/"]

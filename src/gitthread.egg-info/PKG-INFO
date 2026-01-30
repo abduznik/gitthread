@@ -1,0 +1,52 @@
+Metadata-Version: 2.4
+Name: gitthread
+Version: 0.1.0
+Summary: Ingest GitHub Issues and Pull Requests into LLM-friendly text dumps
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: click>=8.0.0
+Requires-Dist: PyGithub>=2.0.0
+Requires-Dist: gitingest>=0.3.1
+Requires-Dist: httpx
+Requires-Dist: loguru>=0.7.0
+Requires-Dist: pydantic
+Requires-Dist: python-dotenv
+Requires-Dist: tiktoken>=0.7.0
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: pytest-asyncio; extra == "dev"
+Provides-Extra: server
+Requires-Dist: fastapi[standard]>=0.109.1; extra == "server"
+Requires-Dist: uvicorn>=0.11.7; extra == "server"
+
+# gitthread 🧵
+
+Ingest GitHub Issues and Pull Requests into LLM-friendly text dumps.
+
+`gitthread` is a companion tool to `gitingest` that focuses on the conversational context of GitHub Issues and Pull Requests.
+
+## Features
+
+- **Issue & PR Ingestion:** Extract title, body, and all comments from any public GitHub issue or PR.
+- **Smart Linking:** Automatically detects and ingests linked issues (e.g., `#123` or "fixes #123") in PR descriptions.
+- **Repository Context:** Integrates with `gitingest` to provide a summary of the repository structure.
+- **LLM-Friendly:** Outputs clean Markdown formatted for easy consumption by LLMs.
+- **CLI & Web:** Use it in your terminal or via a web interface.
+
+## Installation
+
+```bash
+pip install gitthread
+```
+
+## Usage
+
+### CLI
+
+```bash
+gitthread https://github.com/user/repo/issues/1
+```
+
+## License
+
+MIT

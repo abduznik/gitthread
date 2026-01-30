@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+src/gitthread/__init__.py
+src/gitthread/__main__.py
+src/gitthread.egg-info/PKG-INFO
+src/gitthread.egg-info/SOURCES.txt
+src/gitthread.egg-info/dependency_links.txt
+src/gitthread.egg-info/entry_points.txt
+src/gitthread.egg-info/requires.txt
+src/gitthread.egg-info/top_level.txt
