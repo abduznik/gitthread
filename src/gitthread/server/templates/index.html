@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gitthread - Ingest GitHub Issues & PRs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .bg-custom { background-color: #f9fafb; }
+    </style>
+</head>
+<body class="bg-custom min-h-screen flex flex-col items-center py-12 px-4">
+    <div class="max-w-3xl w-full">
+        <header class="text-center mb-12">
+            <h1 class="text-5xl font-bold mb-4">gitthread</h1>
+            <p class="text-xl text-gray-600">Ingest GitHub Issues and Pull Requests into LLM-friendly text dumps.</p>
+        </header>
+
+        <div class="bg-white shadow-md rounded-lg p-8 mb-8">
+            <form id="ingest-form" class="space-y-4">
+                <div>
+                    <label for="url" class="block text-sm font-medium text-gray-700 mb-1">GitHub Issue or PR URL</label>
+                    <input type="text" id="url" name="url" placeholder="https://github.com/user/repo/issues/1" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black">
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="include_repo" name="include_repo" checked
+                        class="h-4 w-4 text-black focus:ring-black border-gray-300 rounded">
+                    <label for="include_repo" class="ml-2 block text-sm text-gray-900">Include Repository Context (gitingest)</label>
+                </div>
+                <button type="submit" id="submit-btn"
+                    class="w-full bg-black text-white font-bold py-3 rounded-md hover:bg-gray-800 transition duration-200">
+                    Ingest
+                </button>
+            </form>
+        </div>
+
+        <div id="loading" class="hidden text-center py-8">
+            <p class="text-gray-600 animate-pulse">Ingesting... please wait.</p>
+        </div>
+
+        <div id="result-container" class="hidden">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-xl font-bold">Result</h2>
+                <button id="copy-btn" class="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded">Copy to Clipboard</button>
+            </div>
+            <pre id="result" class="bg-white border border-gray-300 rounded-lg p-4 overflow-x-auto text-sm whitespace-pre-wrap"></pre>
+        </div>
+        
+        <footer class="mt-12 text-center text-gray-500 text-sm">
+            <p>Inspired by <a href="https://gitingest.com" class="underline">gitingest</a></p>
+        </footer>
+    </div>
+
+    <script>
+        const form = document.getElementById('ingest-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const loading = document.getElementById('loading');
+        const resultContainer = document.getElementById('result-container');
+        const result = document.getElementById('result');
+        const copyBtn = document.getElementById('copy-btn');
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            
+            submitBtn.disabled = true;
+            loading.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+
+            try {
+                const response = await fetch('/ingest', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to ingest');
+                }
+                
+                const text = await response.text();
+                result.textContent = text;
+                resultContainer.classList.remove('hidden');
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                submitBtn.disabled = false;
+                loading.classList.add('hidden');
+            }
+        };
+
+        copyBtn.onclick = () => {
+            navigator.clipboard.writeText(result.textContent);
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => copyBtn.textContent = 'Copy to Clipboard', 2000);
+        };
+    </script>
+</body>
+</html>

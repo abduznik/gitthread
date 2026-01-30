@@ -13,6 +13,7 @@ dependencies = [
     "pydantic",
     "python-dotenv",
     "tiktoken>=0.7.0",
+    "streamlit",
 ]
 
 [project.optional-dependencies]
@@ -27,6 +28,7 @@ server = [
 
 [project.scripts]
 gitthread = "gitthread.__main__:main"
+gitthread-web = "gitthread.web:run"
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
